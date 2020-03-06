@@ -31,8 +31,13 @@ function getAll(){
         })
     })
 }
-
 getAll();
+
+// Updates source csv files once every 12h
+setInterval(()=>{
+    getAll();
+    console.log('data source updated.')
+},43200000);
 
 let app = express();
 
