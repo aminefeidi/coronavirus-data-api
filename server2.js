@@ -51,4 +51,8 @@ app.get("/locations", (req, res) => {
     res.json(countries);
 });
 
+app.get("",(req,res)=>{
+    res.send("HEllO")
+})
+
 app.listen(PORT, () => console.log("express server is running on port 3000"));
