@@ -1,7 +1,7 @@
 const https = require("https");
 const express = require("express");
 const cors = require("cors");
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 const parse = require('./server2parser');
 
 let rawData = {};
@@ -55,4 +55,4 @@ app.get("",(req,res)=>{
     res.send("HEllO")
 })
 
-app.listen(PORT, () => console.log("express server is running on port 3000"));
+app.listen(PORT, () => console.log(`express server is running on port ${PORT}`));
