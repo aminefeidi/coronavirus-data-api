@@ -1,58 +1,49 @@
 const https = require("https");
+const fs = require('fs');
 const express = require("express");
 const cors = require("cors");
 const PORT = process.env.PORT || 3000;
 const parse = require('./server2parser');
 
-let rawData = {};
-let countries = [];
 let finalData = [];
 
-parse().then(res =>{
-    rawData = res;
-    rawData.confirmed.forEach(item => {
-        if (!countries.includes(item['Country/Region'])){
-            countries.push(item['Country/Region']);
-            finalData.push({name:item['Country/Region'],toll:0,recovered:0,deaths:0,sick:0});
-        };
+const sourceUrl = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-';
+let fileNames = ['Confirmed.csv','Recovered.csv','Deaths.csv'];
+
+function getSource(url,n){
+    return new Promise((resolve,reject)=>{
+        https.get(url+n,(res)=>{
+            let temp = fs.createWriteStream('./source/'+n)
+            res.pipe(temp);
+            res.on('end',()=>resolve())
+        })
     })
-    finalData.forEach(country => {
-        rawData.confirmed.forEach(item=>{
-            if (item['Country/Region'] === country.name){
-                let arr = Object.values(item);
-                country.toll += Number(arr[arr.length-1]);
-            }
-        })
-        rawData.recovered.forEach(item=>{
-            if (item['Country/Region'] === country.name){
-                let arr = Object.values(item);
-                country.recovered += Number(arr[arr.length-1]);
-            }
-        })
-        rawData.deaths.forEach(item=>{
-            if (item['Country/Region'] === country.name){
-                let arr = Object.values(item);
-                country.deaths += Number(arr[arr.length-1]);
-            }
-        })
-        country.sick = country.toll - country.recovered;
+}
+
+function getAll(){
+    let requests = [];
+    fileNames.forEach(name=>{
+        requests.push(getSource(sourceUrl,name))
     })
-})
+    Promise.all(requests).then(()=>{
+        parse('./source/Confirmed.csv','./source/Recovered.csv','./source/Deaths.csv').then(data=>{
+            finalData = data;
+        })
+    })
+}
+
+getAll();
 
 let app = express();
 
 app.use(cors());
 
 app.get("/all", (req, res) => {
-    res.json(finalData);
+    res.json(finalData.data);
 });
 
-app.get("/locations", (req, res) => {
-    res.json(countries);
-});
-
-app.get("",(req,res)=>{
-    res.send("HEllO")
+app.get("/locations",(req,res)=>{
+    res.json(finalData.countries);
 })
 
 app.listen(PORT, () => console.log(`express server is running on port ${PORT}`));
