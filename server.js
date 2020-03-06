@@ -3,7 +3,7 @@ const fs = require('fs');
 const express = require("express");
 const cors = require("cors");
 const PORT = process.env.PORT || 3000;
-const parse = require('./server2parser');
+const parse = require('./parser');
 
 let finalData = [];
 
