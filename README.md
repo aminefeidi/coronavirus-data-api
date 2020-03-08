@@ -1,5 +1,7 @@
 # coronavirus-data-api
 Simple API that serves stats about the COVID-19 epidemic. Built with node.js using express server.
+example : https://arcane-island-41018.herokuapp.com/all
+Showcase: https://corona-4c5d1.firebaseapp.com/
 
 ## Data Source
 
