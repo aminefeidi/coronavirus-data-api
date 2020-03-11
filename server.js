@@ -4,7 +4,7 @@ const express = require("express");
 const cors = require("cors");
 const PORT = process.env.PORT || 3000;
 const parse = require('./parser');
-const finalData = require('./all.json')
+//const finalData = require('./all.json')
 
 const sourceUrl = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-';
 let fileNames = ['Confirmed.csv','Recovered.csv','Deaths.csv'];
@@ -32,13 +32,13 @@ function getAll(){
     })
 }
 
-// let finalData = [];
-// getAll();
-// // Updates source csv files once every 12h
-// setInterval(()=>{
-//     getAll();
-//     console.log('data source updated.')
-// },43200000);
+let finalData = [];
+getAll();
+// Updates source csv files once every 12h
+setInterval(()=>{
+    getAll();
+    console.log('data source updated.')
+},43200000);
 
 let app = express();
 
