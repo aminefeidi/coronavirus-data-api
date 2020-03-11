@@ -54,7 +54,7 @@ app.get("/country/:id",(req,res)=>{
     res.json(finalData.data[id-1]);
 })
 
-app.get("/locations",(req,res)=>{
+app.get("/countries",(req,res)=>{
     res.json(finalData.countries);
 })
 
