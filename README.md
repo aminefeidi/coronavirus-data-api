@@ -29,7 +29,7 @@ E.g: {"id":1,"name":"Mainland China"}
 
 ## Example
 
-http://localhost:3000/countries
+http://localhost:3000/country/1
 
 ```json
 {
