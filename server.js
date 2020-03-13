@@ -6,6 +6,8 @@ const PORT = process.env.PORT || 3000;
 const parse = require("./parser");
 //const finalData = require('./all.json')
 
+console.time("bootstrapped");
+
 const sourceUrl =
   "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-";
 let fileNames = ["Confirmed.csv", "Recovered.csv", "Deaths.csv"];
@@ -80,7 +82,7 @@ let globalData = {};
 getAll().then(res=>{
     finalData = res;
     globalData = getGlobalData(finalData.data);
-    console.log("bootstrapping finished.");
+    console.timeEnd("bootstrapped")
 })
 // Updates source csv files once every 12h
 setInterval(() => {
@@ -89,7 +91,7 @@ setInterval(() => {
         globalData = getGlobalData(finalData.data);
         console.log("data source updated.");
     })
-}, 43200000);
+}, 21600000);
 
 let app = express();
 
