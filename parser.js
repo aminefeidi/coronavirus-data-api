@@ -78,8 +78,6 @@ module.exports = async function(conf,rec,ded){
         for (let [date,toll] of Object.entries(country.history.sick)){
             country.history.sick[date] = country.history.toll[date] - (country.history.recovered[date]+country.history.deaths[date]);
         }
-
-        if(country.name === "Diamond Princess cruise ship") country.name = "US";
     })
    
     return {data:finalData,countries};

@@ -23,17 +23,16 @@ function getSource(url, n) {
   });
 }
 
-async function getAll() {
+async function getAll(conf,rec,ded) {
+  fs.unlinkSync(conf);
+  fs.unlinkSync(rec);
+  fs.unlinkSync(ded);
   let requests = [];
   fileNames.forEach(name => {
     requests.push(getSource(sourceUrl, name));
   });
   await Promise.all(requests);
-  return await parse(
-    "./source/Confirmed.csv",
-    "./source/Recovered.csv",
-    "./source/Deaths.csv"
-  );
+  return await parse(conf,rec,ded);
 }
 
 function getGlobalData(countryArr) {
@@ -80,7 +79,11 @@ function getGlobalData(countryArr) {
 let finalData = [];
 let globalData = {};
 
-getAll().then(res=>{
+getAll(
+  "./source/Confirmed.csv",
+  "./source/Recovered.csv",
+  "./source/Deaths.csv"
+).then(res=>{
     finalData = res;
     globalData = getGlobalData(finalData.data);
     console.timeEnd("bootstrapped")
