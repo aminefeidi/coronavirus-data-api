@@ -97,7 +97,7 @@ setInterval(() => {
         console.log("data source updated.");
         lastUpdated = moment();
     })
-}, 21600000);
+}, 1500000);
 
 let app = express();
 
