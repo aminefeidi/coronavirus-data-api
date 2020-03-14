@@ -99,7 +99,6 @@ setInterval(() => {
 let app = express();
 
 app.use(cors());
-app.use(express.static('public/web-app'));
 
 app.get("/all", (req, res) => {
   res.json(finalData.data);
@@ -123,8 +122,6 @@ app.get("/lastUpdate", (req, res) => {
   let now = moment();
   res.json(now.diff(lastUpdated));
 });
-
-app.get("*.*",express.static("/public/web-app"))
 
 
 
