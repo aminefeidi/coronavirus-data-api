@@ -101,25 +101,25 @@ let app = express();
 app.use(cors());
 app.use(express.static('public/web-app'));
 
-app.get("/api/all", (req, res) => {
+app.get("/all", (req, res) => {
   res.json(finalData.data);
 });
 
-app.get("/api/global",(req,res)=>{
+app.get("/global",(req,res)=>{
     res.json(globalData);
 })
 
-app.get("/api/country/:id", (req, res) => {
+app.get("/country/:id", (req, res) => {
   let id = Number(req.params.id);
   if (id < 1 || id > finalData.data.length) res.status(404);
   res.json(finalData.data[id - 1]);
 });
 
-app.get("/api/countries", (req, res) => {
+app.get("/countries", (req, res) => {
   res.json(finalData.countries);
 });
 
-app.get("/api/lastUpdate", (req, res) => {
+app.get("/lastUpdate", (req, res) => {
   let now = moment();
   res.json(now.diff(lastUpdated));
 });
