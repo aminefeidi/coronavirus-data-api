@@ -2,15 +2,16 @@ const https = require("https");
 const fs = require("fs");
 const express = require("express");
 const cors = require("cors");
+const moment = require("moment");
 const PORT = process.env.PORT || 3000;
 const parse = require("./parser");
 //const finalData = require('./all.json')
 
 console.time("bootstrapped");
-
 const sourceUrl =
   "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-";
 let fileNames = ["Confirmed.csv", "Recovered.csv", "Deaths.csv"];
+let lastUpdated;
 
 function getSource(url, n) {
   return new Promise((resolve, reject) => {
@@ -83,6 +84,7 @@ getAll().then(res=>{
     finalData = res;
     globalData = getGlobalData(finalData.data);
     console.timeEnd("bootstrapped")
+    lastUpdated = new Date();
 })
 // Updates source csv files once every 12h
 setInterval(() => {
@@ -90,30 +92,41 @@ setInterval(() => {
         finalData = res;
         globalData = getGlobalData(finalData.data);
         console.log("data source updated.");
+        lastUpdated = moment();
     })
 }, 21600000);
 
 let app = express();
 
 app.use(cors());
+app.use(express.static('public/web-app'));
 
-app.get("/all", (req, res) => {
+app.get("/api/all", (req, res) => {
   res.json(finalData.data);
 });
 
-app.get("/global",(req,res)=>{
+app.get("/api/global",(req,res)=>{
     res.json(globalData);
 })
 
-app.get("/country/:id", (req, res) => {
+app.get("/api/country/:id", (req, res) => {
   let id = Number(req.params.id);
   if (id < 1 || id > finalData.data.length) res.status(404);
   res.json(finalData.data[id - 1]);
 });
 
-app.get("/countries", (req, res) => {
+app.get("/api/countries", (req, res) => {
   res.json(finalData.countries);
 });
+
+app.get("/api/lastUpdate", (req, res) => {
+  let now = moment();
+  res.json(now.diff(lastUpdated));
+});
+
+app.get("*.*",express.static("/public/web-app"))
+
+
 
 app.listen(PORT, () =>
   console.log(`express server is running on port ${PORT}`)
