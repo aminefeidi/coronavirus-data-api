@@ -35,49 +35,7 @@ async function getAll(conf,rec,ded) {
   return await parse(conf,rec,ded);
 }
 
-function getGlobalData(countryArr) {
-  let globalData = {
-    totalToll: 0,
-    totalRec: 0,
-    totalDed: 0,
-    totalSic: 0,
-    history: {
-      toll: null,
-      recovered: null,
-      deaths: null,
-      sick: null
-    }
-  };
-  countryArr.forEach(country => {
-    globalData.totalToll += country.toll;
-    globalData.totalRec += country.recovered;
-    globalData.totalDed += country.deaths;
-    globalData.totalSic += country.sick;
-    if (globalData.history.toll === null) {
-      globalData.history.toll = country.history.toll;
-      globalData.history.recovered = country.history.recovered;
-      globalData.history.deaths = country.history.deaths;
-      globalData.history.sick = country.history.sick;
-    } else {
-      for (let [date, toll] of Object.entries(country.history.toll)) {
-        globalData.history.toll[date] += toll;
-      }
-      for (let [date, toll] of Object.entries(country.history.recovered)) {
-        globalData.history.recovered[date] += toll;
-      }
-      for (let [date, toll] of Object.entries(country.history.deaths)) {
-        globalData.history.deaths[date] += toll;
-      }
-      for (let [date, toll] of Object.entries(country.history.sick)) {
-        globalData.history.sick[date] += toll;
-      }
-    }
-  });
-  return globalData;
-}
-
 let finalData = [];
-let globalData = {};
 
 getAll(
   "./source/Confirmed.csv",
@@ -85,19 +43,21 @@ getAll(
   "./source/Deaths.csv"
 ).then(res=>{
     finalData = res;
-    globalData = getGlobalData(finalData.data);
     console.timeEnd("bootstrapped")
     lastUpdated = new Date();
 })
-// Updates source csv files once every 12h
+// Updates source csv files once every *
 setInterval(() => {
-    getAll().then(res=>{
-        finalData = res;
-        globalData = getGlobalData(finalData.data);
-        console.log("data source updated.");
-        lastUpdated = moment();
-    })
-}, 1500000);
+  getAll(
+    "./source/Confirmed.csv",
+    "./source/Recovered.csv",
+    "./source/Deaths.csv"
+  ).then(res=>{
+      finalData = res;
+      console.log("Data has been updated")
+      lastUpdated = new Date();
+  })
+}, 21600000);
 
 let app = express();
 
@@ -108,7 +68,7 @@ app.get("/all", (req, res) => {
 });
 
 app.get("/global",(req,res)=>{
-    res.json(globalData);
+    res.json(finalData.global);
 })
 
 app.get("/country/:id", (req, res) => {
