@@ -57,11 +57,12 @@ module.exports = async function(conf, rec, ded) {
             i++;
         }
     });
+    let geoJson = toGeoJson(rawData,countries);
     for (country of finalData) {
         populateCountry(country, rawDataEntries);
         addToGlobalData(country, globalData);
     }
-    return { global: globalData, data: finalData, countries };
+    return { global: globalData, data: finalData, geoJson ,countries };
 };
 
 function addToGlobalData(countryRef, globalData) {
@@ -107,4 +108,49 @@ function calculateSick(country) {
             country.history.toll[date] -
             (country.history.recovered[date] + country.history.deaths[date]);
     }
+}
+
+function toGeoJson(rawDataObj,countries) {
+    let rawToll = rawDataObj.toll;
+    let rawRecovered = rawDataObj.recovered;
+    let rawDeaths = rawDataObj.deaths;
+    let geoJson = {
+        type: "FeatureCollection",
+        features: []
+    };
+    let i = 0;
+    for (row of rawToll) {
+        let id;
+        for (country of countries){
+            if(row["Country/Region"] === country.name){
+                id = country.id;
+                break;
+            }
+        }
+        let tol = Object.values(row);
+        let rec = Object.values(rawRecovered[i]);
+        let ded = Object.values(rawDeaths[i]);
+        let newFeature = {
+            type: "Feature",
+            geometry: {
+                type: "Point",
+                coordinates: [Number(row["Long"]), Number(row["Lat"])]
+            },
+            properties: {
+                region: row["Province/State"],
+                country: row["Country/Region"],
+                countryId:id,
+                toll: Number(tol[tol.length - 1]),
+                recovered: Number(rec[rec.length - 1]),
+                deaths: Number(ded[ded.length-1]),
+                sick: null
+            }
+        };
+        newFeature.properties.sick =
+            newFeature.properties.toll -
+            (newFeature.properties.recovered + newFeature.properties.deaths);
+        geoJson.features.push(newFeature);
+        i++;
+    }
+    return geoJson;
 }
