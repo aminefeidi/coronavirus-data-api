@@ -24,14 +24,14 @@ function getSource(url, n) {
 }
 
 async function getAll(conf,rec,ded) {
-  // fs.unlinkSync(conf);
-  // fs.unlinkSync(rec);
-  // fs.unlinkSync(ded);
-  // let requests = [];
-  // fileNames.forEach(name => {
-  //   requests.push(getSource(sourceUrl, name));
-  // });
-  // await Promise.all(requests);
+  fs.unlinkSync(conf);
+  fs.unlinkSync(rec);
+  fs.unlinkSync(ded);
+  let requests = [];
+  fileNames.forEach(name => {
+    requests.push(getSource(sourceUrl, name));
+  });
+  await Promise.all(requests);
   return await parse(conf,rec,ded);
 }
 
