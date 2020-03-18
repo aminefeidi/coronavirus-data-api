@@ -7,7 +7,6 @@ const moment = require("moment");
 const PORT = process.env.PORT || 3000;
 const parse = require("./parser");
 const notify = require("./notify");
-//const finalData = require('./all.json')
 
 console.time("bootstrapped");
 const sourceUrl =
