@@ -2,7 +2,7 @@ const fs = require("fs");
 const csv = require("neat-csv");
 const isDate = require("./utils/isDate");
 
-module.exports = async function(conf, rec, ded) {
+module.exports = async function(fileNames) {
     let rawData = {};
     let countries = [];
     let finalData = [];
@@ -19,13 +19,9 @@ module.exports = async function(conf, rec, ded) {
         }
     };
 
-    let confirmedCsv = fs.createReadStream(conf);
-    let recoveredCsv = fs.createReadStream(rec);
-    let deathsCsv = fs.createReadStream(ded);
-
-    rawData.toll = await csv(confirmedCsv);
-    rawData.recovered = await csv(recoveredCsv);
-    rawData.deaths = await csv(deathsCsv);
+    rawData.toll = await csv(fs.createReadStream("./source/"+fileNames[0]));
+    rawData.recovered = await csv(fs.createReadStream("./source/"+fileNames[1]));
+    rawData.deaths = await csv(fs.createReadStream("./source/"+fileNames[2]));
 
     let rawDataEntries = Object.entries(rawData);
 
