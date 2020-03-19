@@ -32,8 +32,11 @@ PRIVATE_VAPID = "-HSBqsaGhBJulrpvssea9_VDOIOzpxHOcbQqHL1A15Q";
 webpush.setVapidDetails("https://www.coronalivedata.com/", PUBLIC_VAPID, PRIVATE_VAPID);
 
 function add(subscription) {
-    let sub = new Subscriptions(subscription);
-    sub.save(err => console.log(err));
+    return new Promise((resolve,reject)=>{
+        let sub = new Subscriptions(subscription);
+        sub.save(err => reject(err));
+        resolve(sub);
+    })
 }
 
 function send(msg) {

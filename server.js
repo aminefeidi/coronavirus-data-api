@@ -78,12 +78,16 @@ app.use(cors());
 app.use(bodyParser.json());
 
 app.post("/subscribe", (req, res) => {
-    notify.add(req.body)
+    notify.add(req.body).then(r=>res.sendStatus(200)).catch(err=>{
+        console.log(err);
+        res.sendStatus(500);
+    })
 });
 
 app.get("/sendAll",(req,res)=>{
     notify.send('Number of confirmed cases '+finalData.global.toll).then(() => {
         console.log("Notifications sent")
+        res.sendStatus(200);
     }).catch(err=>console.log("error in notify module:",err))
 })
 
