@@ -29,7 +29,7 @@ PUBLIC_VAPID =
     "BDECb2hz0gSaM5IWufEtrxNXXgEE3iqQ4kZ48KVMoCU2OC7FOOITBSScpmUbBE-Wsg0FYZftdMCye_IF4VKFznw";
 PRIVATE_VAPID = "-HSBqsaGhBJulrpvssea9_VDOIOzpxHOcbQqHL1A15Q";
 
-webpush.setVapidDetails("https://corona-4c5d1.firebaseapp.com/", PUBLIC_VAPID, PRIVATE_VAPID);
+webpush.setVapidDetails("https://www.coronalivedata.com/", PUBLIC_VAPID, PRIVATE_VAPID);
 
 function add(subscription) {
     let sub = new Subscriptions(subscription);

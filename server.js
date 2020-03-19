@@ -64,9 +64,6 @@ setInterval(() => {
         ) {
             finalData = res;
             console.log("Data has been updated, changes detected");
-            notify.send('Number of confirmed cases '+finalData.global.toll).then(() => {
-                console.log("Notifications sent")
-            }).catch(err=>console.log("error in notify module:",err))
             
         }else{
             console.log("Data has been updated, no new changes");
@@ -83,6 +80,12 @@ app.use(bodyParser.json());
 app.post("/subscribe", (req, res) => {
     notify.add(req.body)
 });
+
+app.get("/sendAll",(req,res)=>{
+    notify.send('Number of confirmed cases '+finalData.global.toll).then(() => {
+        console.log("Notifications sent")
+    }).catch(err=>console.log("error in notify module:",err))
+})
 
 app.get("/all", (req, res) => {
     res.json(finalData.data);
