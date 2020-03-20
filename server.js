@@ -70,7 +70,7 @@ setInterval(() => {
         }
         lastUpdated = new Date();
     });
-}, 3 * 3600000);
+}, 3600000/2);
 
 let app = express();
 
