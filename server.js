@@ -1,4 +1,5 @@
 const https = require("https");
+const http = require("http");
 const fs = require("fs");
 const express = require("express");
 const cors = require("cors");
@@ -103,6 +104,25 @@ app.get("/country/:id", (req, res) => {
     let id = Number(req.params.id);
     if (id < 1 || id > finalData.data.length) res.status(404);
     res.json(finalData.data[id - 1]);
+});
+
+app.get("/userCountry/:ip", (req, res) => {
+    http.get("http://api.ipstack.com/"+req.params.ip+"?access_key=a191dd5352de08c64c612cd5c401ea5f&format=1",resp=>{
+        let body = "";
+
+    resp.on("data", (chunk) => {
+        body += chunk;
+    });
+
+    resp.on("end", () => {
+        try {
+            let json = JSON.parse(body);
+            res.json(json);
+        } catch (error) {
+            console.error(error.message);
+        };
+    });
+    })
 });
 
 app.get("/countries", (req, res) => {
