@@ -1,6 +1,7 @@
 const fs = require("fs");
 const csv = require("neat-csv");
 const isDate = require("./utils/isDate");
+const covid = require('novelcovid');
 
 module.exports = async function(fileNames) {
     let rawData = {};
@@ -22,8 +23,11 @@ module.exports = async function(fileNames) {
     rawData.toll = await csv(fs.createReadStream("./source/"+fileNames[0]));
     rawData.recovered = await csv(fs.createReadStream("./source/"+fileNames[1]));
     rawData.deaths = await csv(fs.createReadStream("./source/"+fileNames[2]));
-
     let rawDataEntries = Object.entries(rawData);
+
+    let altData = {};
+    altData.all = await covid.all();
+    altData.countries = await covid.countries();
 
     let i = 1;
     rawData.toll.forEach(item => {
@@ -53,11 +57,13 @@ module.exports = async function(fileNames) {
             i++;
         }
     });
-    let geoJson = toGeoJson(rawData,countries);
     for (country of finalData) {
         populateCountry(country, rawDataEntries);
+        compareCountry(country,altData.countries);
         addToGlobalData(country, globalData);
     }
+    let geoJson = toGeoJson(rawData,finalData);
+    compareGlobal(globalData,altData.all);
     return { global: globalData, data: finalData, geoJson ,countries };
 };
 
@@ -117,9 +123,10 @@ function toGeoJson(rawDataObj,countries) {
     let i = 0;
     for (row of rawToll) {
         let id;
+        let thisCountry;
         for (country of countries){
             if(row["Country/Region"] === country.name){
-                id = country.id;
+                thisCountry = country;
                 break;
             }
         }
@@ -135,10 +142,10 @@ function toGeoJson(rawDataObj,countries) {
             properties: {
                 region: row["Province/State"],
                 country: row["Country/Region"],
-                countryId:id,
-                toll: Number(tol[tol.length - 1]),
-                recovered: Number(rec[rec.length - 1]),
-                deaths: Number(ded[ded.length-1]),
+                countryId:thisCountry.id,
+                toll: thisCountry.toll,
+                recovered: thisCountry.recovered,
+                deaths: thisCountry.deaths,
                 sick: null
             }
         };
@@ -149,4 +156,34 @@ function toGeoJson(rawDataObj,countries) {
         i++;
     }
     return geoJson;
+}
+
+function compareCountry(country,altCountries){
+    let found = false;
+    for(c of altCountries){
+        fixName(c);
+        if(c.country === country.name){
+            country.toll = c.cases;
+            country.deaths = c.deaths;
+            country.recovered = c.recovered;
+            country.sick = c.active;
+            found = true;
+            break;
+        }
+    }
+    //if(!found) console.log(country.name);
+}
+
+function compareGlobal(global,alt){
+    if(global.toll < alt.cases) global.toll = Number(alt.cases);
+    if(global.deaths < alt.deaths) global.deaths = Number(alt.deaths);
+    if(global.recovered < alt.recovered) global.recovered = Number(alt.recovered);
+    if(global.sick < alt.active) global.sick = global.toll - (global.deaths + global.recovered);
+}
+
+function fixName(c){
+    if(c.country === "USA") c.country = "US";
+    if(c.country === "UK") c.country = "United Kingdom";
+    if(c.country === "UAE") c.country = "United Arab Emirates";
+    if(c.country === "S. Korea") c.country = "Korea, South";
 }

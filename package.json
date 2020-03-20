@@ -16,6 +16,7 @@
     "moment": "^2.24.0",
     "mongoose": "^5.9.5",
     "neat-csv": "^5.2.0",
+    "novelcovid": "^1.0.4",
     "pg": "^7.18.2",
     "web-push": "^3.4.3"
   }
