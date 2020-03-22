@@ -1,5 +1,6 @@
 const https = require("https");
 const http = require("http");
+const path = require("path");
 const fs = require("fs");
 const express = require("express");
 const cors = require("cors");
@@ -78,35 +79,37 @@ let app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-app.post("/subscribe", (req, res) => {
+// app.use(express.static(path.join(__dirname,'browser')))
+
+app.post("/api/subscribe", (req, res) => {
     notify.add(req.body).then(r=>res.sendStatus(200)).catch(err=>{
         console.log(err);
         res.sendStatus(500);
     })
 });
 
-app.get("/sendAll",(req,res)=>{
+app.get("/api/sendAll",(req,res)=>{
     notify.send('Number of confirmed cases '+finalData.global.toll).then(() => {
         console.log("Notifications sent")
         res.sendStatus(200);
     }).catch(err=>console.log("error in notify module:",err))
 })
 
-app.get("/all", (req, res) => {
+app.get("/api/all", (req, res) => {
     res.json(finalData.data);
 });
 
-app.get("/global", (req, res) => {
+app.get("/api/global", (req, res) => {
     res.json(finalData.global);
 });
 
-app.get("/country/:id", (req, res) => {
+app.get("/api/country/:id", (req, res) => {
     let id = Number(req.params.id);
     if (id < 1 || id > finalData.data.length) res.status(404);
     res.json(finalData.data[id - 1]);
 });
 
-app.get("/userCountry/:ip", (req, res) => {
+app.get("/api/userCountry/:ip", (req, res) => {
     http.get("http://api.ipstack.com/"+req.params.ip+"?access_key=a191dd5352de08c64c612cd5c401ea5f&format=1",resp=>{
         let body = "";
 
@@ -125,18 +128,23 @@ app.get("/userCountry/:ip", (req, res) => {
     })
 });
 
-app.get("/countries", (req, res) => {
+app.get("/api/countries", (req, res) => {
     res.json(finalData.countries);
 });
 
-app.get("/lastUpdate", (req, res) => {
+app.get("/api/lastUpdate", (req, res) => {
     let now = moment();
     res.json(now.diff(lastUpdated));
 });
 
-app.get("/geoJson", (req, res) => {
+app.get("/api/geoJson", (req, res) => {
     res.json(finalData.geoJson);
 });
+
+// app.get('*', (req, res) => 
+// {
+//   res.sendFile(path.join(__dirname,'browser/index.html'));
+//  });
 
 app.listen(PORT, () =>
     console.log(`express server is running on port ${PORT}`)

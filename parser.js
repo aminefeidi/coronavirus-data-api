@@ -133,7 +133,8 @@ function toGeoJson(rawDataObj,countries) {
         let tol = Object.values(row);
         let rec = Object.values(rawRecovered[i]);
         let ded = Object.values(rawDeaths[i]);
-        let newFeature = {
+        let newFeature = row["Province/State"] === '' ?
+        {
             type: "Feature",
             geometry: {
                 type: "Point",
@@ -148,7 +149,24 @@ function toGeoJson(rawDataObj,countries) {
                 deaths: thisCountry.deaths,
                 sick: null
             }
-        };
+        }
+        :
+        {
+            type: "Feature",
+            geometry: {
+                type: "Point",
+                coordinates: [Number(row["Long"]), Number(row["Lat"])]
+            },
+            properties: {
+                region: row["Province/State"],
+                country: row["Country/Region"],
+                countryId:thisCountry.id,
+                toll: tol[tol.length-1],
+                recovered: rec[rec.length-1],
+                deaths: ded[ded.length-1],
+                sick: null
+            }
+        }
         newFeature.properties.sick =
             newFeature.properties.toll -
             (newFeature.properties.recovered + newFeature.properties.deaths);
