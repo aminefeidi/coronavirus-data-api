@@ -79,7 +79,7 @@ let app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-app.use(express.static(path.join(__dirname,'browser')))
+// app.use(express.static(path.join(__dirname,'browser')))
 
 app.post("/api/subscribe", (req, res) => {
     notifier.add(req.body).then(r=>res.sendStatus(200)).catch(err=>{
