@@ -8,7 +8,7 @@ const bodyParser = require("body-parser");
 const moment = require("moment");
 const PORT = process.env.PORT || 3000;
 const parse = require("./parser");
-const notify = require("./notify");
+const notifier = require("./notifier");
 
 console.time("bootstrapped");
 const sourceUrl =
@@ -79,17 +79,17 @@ let app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// app.use(express.static(path.join(__dirname,'browser')))
+app.use(express.static(path.join(__dirname,'browser')))
 
 app.post("/api/subscribe", (req, res) => {
-    notify.add(req.body).then(r=>res.sendStatus(200)).catch(err=>{
+    notifier.add(req.body).then(r=>res.sendStatus(200)).catch(err=>{
         console.log(err);
         res.sendStatus(500);
     })
 });
 
 app.get("/api/sendAll",(req,res)=>{
-    notify.send('Number of confirmed cases '+finalData.global.toll).then(() => {
+    notifier.send(finalData).then(() => {
         console.log("Notifications sent")
         res.sendStatus(200);
     }).catch(err=>console.log("error in notify module:",err))

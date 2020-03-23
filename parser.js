@@ -122,7 +122,6 @@ function toGeoJson(rawDataObj,countries) {
     };
     let i = 0;
     for (row of rawToll) {
-        let id;
         let thisCountry;
         for (country of countries){
             if(row["Country/Region"] === country.name){
@@ -204,4 +203,5 @@ function fixName(c){
     if(c.country === "UK") c.country = "United Kingdom";
     if(c.country === "UAE") c.country = "United Arab Emirates";
     if(c.country === "S. Korea") c.country = "Korea, South";
+    if(c.country === "Diamond Princess") c.country = "Cruise Ship";
 }
