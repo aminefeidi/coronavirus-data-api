@@ -32,7 +32,7 @@ module.exports = async function(fileNames) {
 
     let altData = {};
     if(process.env.dev){
-        altData = altJson;
+        //altData = altJson;
     }else{
         try {
             altData.all = await covid.all();
@@ -109,7 +109,7 @@ function populateCountry(country, entries) {
 
 function calculateSick(country) {
     country.sick = country.toll - (country.recovered + country.deaths);
-    for (let [date, toll] of Object.entries(country.history.sick)) {
+    for (let [date, toll] of Object.entries(country.history.toll)) {
         country.history.sick[date] =
             country.history.toll[date] -
             (country.history.recovered[date] + country.history.deaths[date]);

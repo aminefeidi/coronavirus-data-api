@@ -10,9 +10,9 @@ const PORT = process.env.PORT || 3000;
 const parse = require("./parser");
 const userCountry = require("./utils/userCountry");
 const notifier = require("./notifier");
-//const dotenv = require("dotenv");
+const dotenv = require("dotenv");
 
-//dotenv.config();
+dotenv.config();
 console.time("bootstrapped");
 const sourceUrl =
     "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-";

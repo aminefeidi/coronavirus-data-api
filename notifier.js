@@ -3,6 +3,8 @@ const mongoose = require("mongoose");
 
 let Subscriptions;
 
+console.log(process.env.dev)
+
 mongoose.connect(
     process.env.DB_STRING,
     { useNewUrlParser: true, useUnifiedTopology: true }
@@ -70,7 +72,7 @@ function send(finalData) {
                 notificationPayload.notification.body = `Number of confirmed cases in ${finalData.data[id-1].name}: ${finalData.data[id-1].toll}`
             }
             let sub = subscription.object;
-            console.log(sub)
+            //console.log(sub)
             promises.push(
                 webpush.sendNotification(
                     sub,
