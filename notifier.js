@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 let Subscriptions;
 
 mongoose.connect(
-    "mongodb+srv://user:private47@cluster0-xuu8p.mongodb.net/test?retryWrites=true&w=majority",
+    process.env.DB_STRING,
     { useNewUrlParser: true, useUnifiedTopology: true }
 );
 
@@ -27,9 +27,10 @@ db.once("open", function() {
     Subscriptions = mongoose.model("Subscriptions", subscriptionSchema);
 });
 
-PUBLIC_VAPID =
-    "BDECb2hz0gSaM5IWufEtrxNXXgEE3iqQ4kZ48KVMoCU2OC7FOOITBSScpmUbBE-Wsg0FYZftdMCye_IF4VKFznw";
-PRIVATE_VAPID = "-HSBqsaGhBJulrpvssea9_VDOIOzpxHOcbQqHL1A15Q";
+let fakeSubs = [];
+
+PUBLIC_VAPID = process.env.PUBLIC_VAPID;
+PRIVATE_VAPID = process.env.PRIVATE_VAPID;
 
 webpush.setVapidDetails(
     "https://www.coronalivedata.com/",
@@ -38,11 +39,11 @@ webpush.setVapidDetails(
 );
 
 function add(subscription) {
-    console.log(subscription)
     return new Promise((resolve, reject) => {
         let sub = new Subscriptions(subscription);
         sub.save(err => reject(err));
-        resolve(sub);
+        if(process.env.dev) fakeSubs.push(subscription)
+        resolve();
     });
 }
 
@@ -58,21 +59,27 @@ function send(finalData) {
     const promises = [];
     Subscriptions.find((err, subs) => {
         if (err) return console.log(err);
-        subs.forEach(subscription => {
+        for(subscription of subs){
+            if(!subscription.object){
+                subscription={object:subscription,subjectId:0};
+            }
             let id = Number(subscription.subjectId);
             if(id === 0){
                 notificationPayload.notification.body =`Number of confirmed global cases: ${finalData.global.toll}`
             }else{
                 notificationPayload.notification.body = `Number of confirmed cases in ${finalData.data[id-1].name}: ${finalData.data[id-1].toll}`
             }
+            let sub = subscription.object;
+            console.log(sub)
             promises.push(
                 webpush.sendNotification(
-                    subscription.object,
+                    sub,
                     JSON.stringify(notificationPayload)
                 )
             );
-        });
+        }
     });
+    
     return Promise.all(promises);
 }
 

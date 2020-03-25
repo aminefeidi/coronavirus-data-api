@@ -2,6 +2,7 @@ const fs = require("fs");
 const csv = require("neat-csv");
 const isDate = require("./utils/isDate");
 const covid = require('novelcovid');
+const altJson = require('./source/alt');
 
 module.exports = async function(fileNames) {
     let rawData = {};
@@ -20,51 +21,45 @@ module.exports = async function(fileNames) {
         }
     };
 
-    rawData.toll = await csv(fs.createReadStream("./source/"+fileNames[0]));
-    rawData.recovered = await csv(fs.createReadStream("./source/"+fileNames[1]));
-    rawData.deaths = await csv(fs.createReadStream("./source/"+fileNames[2]));
+    try {
+        rawData.toll = await csv(fs.createReadStream("./source/"+fileNames[0]));
+        rawData.recovered = await csv(fs.createReadStream("./source/"+fileNames[1]));
+        rawData.deaths = await csv(fs.createReadStream("./source/"+fileNames[2]));
+    } catch (error) {
+        console.log("error parsing csv")
+        throw error;
+    }
     let rawDataEntries = Object.entries(rawData);
 
     let altData = {};
-    altData.all = await covid.all();
-    altData.countries = await covid.countries();
+    if(process.env.dev){
+        altData = altJson;
+    }else{
+        try {
+            altData.all = await covid.all();
+            altData.countries = await covid.countries();
+        } catch (error) {
+            console.log("error with alternative data source")
+            throw error
+        }
+    }
 
     let i = 1;
     rawData.toll.forEach(item => {
         if (!countries.some(e => e.name === item["Country/Region"])) {
             countries.push({ id: i, name: item["Country/Region"] });
-            let newCountry = {
-                id: i,
-                name: item["Country/Region"],
-                toll: 0,
-                recovered: 0,
-                deaths: 0,
-                sick: 0,
-                history: { toll: {}, recovered: {}, deaths: {}, sick: {} }
-            };
-            let entries = Object.entries(item);
-            // further optimisation needed...
-            // make a 'dates' array ??
-            entries.forEach(([key, val]) => {
-                if (isDate(key) && val != "") {
-                    newCountry.history.toll[key] = 0;
-                    newCountry.history.recovered[key] = 0;
-                    newCountry.history.deaths[key] = 0;
-                    newCountry.history.sick[key] = 0;
-                }
-            });
-            finalData.push(newCountry);
             i++;
         }
     });
-    for (country of finalData) {
-        populateCountry(country, rawDataEntries);
-        compareCountry(country,altData.countries);
-        addToGlobalData(country, globalData);
+    for (country of countries) {
+        let newCountry = populateCountry(country, rawDataEntries);
+        finalData.push(newCountry);
+        compareCountry(newCountry,altData.countries);
+        addToGlobalData(newCountry, globalData);
     }
     let geoJson = toGeoJson(rawData,finalData);
     compareGlobal(globalData,altData.all);
-    return { global: globalData, data: finalData, geoJson ,countries };
+    return { global: globalData, data: finalData, geoJson ,countries,alt:altData };
 };
 
 function addToGlobalData(countryRef, globalData) {
@@ -84,23 +79,33 @@ function addToGlobalData(countryRef, globalData) {
 }
 
 function populateCountry(country, entries) {
+    let newCountry = {
+        id: country.id,
+        name: country.name,
+        toll: 0,
+        recovered: 0,
+        deaths: 0,
+        sick: 0,
+        history: { toll: {}, recovered: {}, deaths: {}, sick: {} }
+    };
     for ([typeName, type] of entries) {
         for (item of type) {
             if (item["Country/Region"] === country.name) {
                 let entries = Object.entries(item);
                 entries.forEach(([key, val]) => {
                     if (isDate(key) && val != "") {
-                        country.history[typeName][key] += Number(val);
+                        if(!newCountry.history[typeName][key]) newCountry.history[typeName][key]=0;
+                        newCountry.history[typeName][key] += Number(val);
                     }
                 });
                 let values = Object.values(item);
                 let latest = values[values.length - 1];
-                if (latest === "") latest = values[values.length - 2];
-                country[typeName] += Number(latest);
+                newCountry[typeName] += Number(latest);
             }
         }
     }
-    calculateSick(country);
+    calculateSick(newCountry);
+    return newCountry
 }
 
 function calculateSick(country) {
@@ -143,9 +148,9 @@ function toGeoJson(rawDataObj,countries) {
                 region: row["Province/State"],
                 country: row["Country/Region"],
                 countryId:thisCountry.id,
-                toll: thisCountry.toll,
-                recovered: thisCountry.recovered,
-                deaths: thisCountry.deaths,
+                toll: Number(thisCountry.toll),
+                recovered: Number(thisCountry.recovered),
+                deaths: Number(thisCountry.deaths),
                 sick: null
             }
         }
@@ -160,9 +165,9 @@ function toGeoJson(rawDataObj,countries) {
                 region: row["Province/State"],
                 country: row["Country/Region"],
                 countryId:thisCountry.id,
-                toll: tol[tol.length-1],
-                recovered: rec[rec.length-1],
-                deaths: ded[ded.length-1],
+                toll: Number(tol[tol.length-1]),
+                recovered: Number(rec[rec.length-1]),
+                deaths: Number(ded[ded.length-1]),
                 sick: null
             }
         }
@@ -176,7 +181,6 @@ function toGeoJson(rawDataObj,countries) {
 }
 
 function compareCountry(country,altCountries){
-    let found = false;
     for(c of altCountries){
         fixName(c);
         if(c.country === country.name){
@@ -184,11 +188,9 @@ function compareCountry(country,altCountries){
             country.deaths = c.deaths;
             country.recovered = c.recovered;
             country.sick = c.active;
-            found = true;
             break;
         }
     }
-    //if(!found) console.log(country.name);
 }
 
 function compareGlobal(global,alt){
