@@ -56,7 +56,7 @@ function send(finalData) {
         }
     };
 
-    const promises = [];
+    let promises = [];
     Subscriptions.find((err, subs) => {
         if (err) return console.log(err);
         for(subscription of subs){
@@ -75,7 +75,7 @@ function send(finalData) {
                 webpush.sendNotification(
                     sub,
                     JSON.stringify(notificationPayload)
-                )
+                ).catch(err=>console.log(err))
             );
         }
     });
