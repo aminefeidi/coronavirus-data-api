@@ -2,7 +2,6 @@ const fs = require("fs");
 const csv = require("neat-csv");
 const isDate = require("./utils/isDate");
 const covid = require('novelcovid');
-const altJson = require('./source/alt');
 
 module.exports = async function(fileNames) {
     let rawData = {};
