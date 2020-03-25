@@ -6,14 +6,15 @@ const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const moment = require("moment");
+const dotenv = require("dotenv");
+dotenv.config();
+
 const PORT = process.env.PORT || 3000;
 const parse = require("./parser");
 const userCountry = require("./utils/userCountry");
 const notifier = require("./notifier");
-const dotenv = require("dotenv");
-
-dotenv.config();
 console.time("bootstrapped");
+
 const sourceUrl =
     "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-";
 let fileNames = ["Confirmed.csv", "Recovered.csv", "Deaths.csv"];
@@ -25,7 +26,7 @@ let tempData = {};
 let app = express();
 app.use(cors());
 app.use(bodyParser.json());
-//app.use(express.static(path.join(__dirname,'browser')));
+
 
 (async () => {
     try {

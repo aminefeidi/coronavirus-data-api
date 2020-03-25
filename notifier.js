@@ -3,8 +3,6 @@ const mongoose = require("mongoose");
 
 let Subscriptions;
 
-console.log(process.env.dev)
-
 mongoose.connect(
     process.env.DB_STRING,
     { useNewUrlParser: true, useUnifiedTopology: true }

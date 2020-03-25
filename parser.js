@@ -1,7 +1,7 @@
 const fs = require("fs");
 const csv = require("neat-csv");
 const isDate = require("./utils/isDate");
-const covid = require('novelcovid');
+const covid = require("novelcovid");
 
 module.exports = async function(fileNames) {
     let rawData = {};
@@ -21,26 +21,29 @@ module.exports = async function(fileNames) {
     };
 
     try {
-        rawData.toll = await csv(fs.createReadStream("./source/"+fileNames[0]));
-        rawData.recovered = await csv(fs.createReadStream("./source/"+fileNames[1]));
-        rawData.deaths = await csv(fs.createReadStream("./source/"+fileNames[2]));
+        rawData.toll = await csv(
+            fs.createReadStream("./source/" + fileNames[0])
+        );
+        rawData.recovered = await csv(
+            fs.createReadStream("./source/" + fileNames[1])
+        );
+        rawData.deaths = await csv(
+            fs.createReadStream("./source/" + fileNames[2])
+        );
     } catch (error) {
-        console.log("error parsing csv")
+        console.log("error parsing csv");
         throw error;
     }
     let rawDataEntries = Object.entries(rawData);
 
     let altData = {};
-    if(process.env.dev){
-        //altData = altJson;
-    }else{
-        try {
-            altData.all = await covid.all();
-            altData.countries = await covid.countries();
-        } catch (error) {
-            console.log("error with alternative data source")
-            throw error
-        }
+
+    try {
+        altData.all = await covid.all();
+        altData.countries = await covid.countries();
+    } catch (error) {
+        console.log("error with alternative data source");
+        throw error;
     }
 
     let i = 1;
@@ -53,12 +56,18 @@ module.exports = async function(fileNames) {
     for (country of countries) {
         let newCountry = populateCountry(country, rawDataEntries);
         finalData.push(newCountry);
-        compareCountry(newCountry,altData.countries);
+        compareCountry(newCountry, altData.countries);
         addToGlobalData(newCountry, globalData);
     }
-    let geoJson = toGeoJson(rawData,finalData);
-    compareGlobal(globalData,altData.all);
-    return { global: globalData, data: finalData, geoJson ,countries,alt:altData };
+    let geoJson = toGeoJson(rawData, finalData);
+    compareGlobal(globalData, altData.all);
+    return {
+        global: globalData,
+        data: finalData,
+        geoJson,
+        countries,
+        alt: altData
+    };
 };
 
 function addToGlobalData(countryRef, globalData) {
@@ -93,7 +102,8 @@ function populateCountry(country, entries) {
                 let entries = Object.entries(item);
                 entries.forEach(([key, val]) => {
                     if (isDate(key) && val != "") {
-                        if(!newCountry.history[typeName][key]) newCountry.history[typeName][key]=0;
+                        if (!newCountry.history[typeName][key])
+                            newCountry.history[typeName][key] = 0;
                         newCountry.history[typeName][key] += Number(val);
                     }
                 });
@@ -104,7 +114,7 @@ function populateCountry(country, entries) {
         }
     }
     calculateSick(newCountry);
-    return newCountry
+    return newCountry;
 }
 
 function calculateSick(country) {
@@ -116,7 +126,7 @@ function calculateSick(country) {
     }
 }
 
-function toGeoJson(rawDataObj,countries) {
+function toGeoJson(rawDataObj, countries) {
     let rawToll = rawDataObj.toll;
     let rawRecovered = rawDataObj.recovered;
     let rawDeaths = rawDataObj.deaths;
@@ -127,8 +137,8 @@ function toGeoJson(rawDataObj,countries) {
     let i = 0;
     for (row of rawToll) {
         let thisCountry;
-        for (country of countries){
-            if(row["Country/Region"] === country.name){
+        for (country of countries) {
+            if (row["Country/Region"] === country.name) {
                 thisCountry = country;
                 break;
             }
@@ -136,40 +146,40 @@ function toGeoJson(rawDataObj,countries) {
         let tol = Object.values(row);
         let rec = Object.values(rawRecovered[i]);
         let ded = Object.values(rawDeaths[i]);
-        let newFeature = row["Province/State"] === '' ?
-        {
-            type: "Feature",
-            geometry: {
-                type: "Point",
-                coordinates: [Number(row["Long"]), Number(row["Lat"])]
-            },
-            properties: {
-                region: row["Province/State"],
-                country: row["Country/Region"],
-                countryId:thisCountry.id,
-                toll: Number(thisCountry.toll),
-                recovered: Number(thisCountry.recovered),
-                deaths: Number(thisCountry.deaths),
-                sick: null
-            }
-        }
-        :
-        {
-            type: "Feature",
-            geometry: {
-                type: "Point",
-                coordinates: [Number(row["Long"]), Number(row["Lat"])]
-            },
-            properties: {
-                region: row["Province/State"],
-                country: row["Country/Region"],
-                countryId:thisCountry.id,
-                toll: Number(tol[tol.length-1]),
-                recovered: Number(rec[rec.length-1]),
-                deaths: Number(ded[ded.length-1]),
-                sick: null
-            }
-        }
+        let newFeature =
+            row["Province/State"] === ""
+                ? {
+                      type: "Feature",
+                      geometry: {
+                          type: "Point",
+                          coordinates: [Number(row["Long"]), Number(row["Lat"])]
+                      },
+                      properties: {
+                          region: row["Province/State"],
+                          country: row["Country/Region"],
+                          countryId: thisCountry.id,
+                          toll: Number(thisCountry.toll),
+                          recovered: Number(thisCountry.recovered),
+                          deaths: Number(thisCountry.deaths),
+                          sick: null
+                      }
+                  }
+                : {
+                      type: "Feature",
+                      geometry: {
+                          type: "Point",
+                          coordinates: [Number(row["Long"]), Number(row["Lat"])]
+                      },
+                      properties: {
+                          region: row["Province/State"],
+                          country: row["Country/Region"],
+                          countryId: thisCountry.id,
+                          toll: Number(tol[tol.length - 1]),
+                          recovered: Number(rec[rec.length - 1]),
+                          deaths: Number(ded[ded.length - 1]),
+                          sick: null
+                      }
+                  };
         newFeature.properties.sick =
             newFeature.properties.toll -
             (newFeature.properties.recovered + newFeature.properties.deaths);
@@ -179,10 +189,10 @@ function toGeoJson(rawDataObj,countries) {
     return geoJson;
 }
 
-function compareCountry(country,altCountries){
-    for(c of altCountries){
+function compareCountry(country, altCountries) {
+    for (c of altCountries) {
         fixName(c);
-        if(c.country === country.name){
+        if (c.country === country.name) {
             country.toll = c.cases;
             country.deaths = c.deaths;
             country.recovered = c.recovered;
@@ -192,17 +202,19 @@ function compareCountry(country,altCountries){
     }
 }
 
-function compareGlobal(global,alt){
-    if(global.toll < alt.cases) global.toll = Number(alt.cases);
-    if(global.deaths < alt.deaths) global.deaths = Number(alt.deaths);
-    if(global.recovered < alt.recovered) global.recovered = Number(alt.recovered);
-    if(global.sick < alt.active) global.sick = global.toll - (global.deaths + global.recovered);
+function compareGlobal(global, alt) {
+    if (global.toll < alt.cases) global.toll = Number(alt.cases);
+    if (global.deaths < alt.deaths) global.deaths = Number(alt.deaths);
+    if (global.recovered < alt.recovered)
+        global.recovered = Number(alt.recovered);
+    if (global.sick < alt.active)
+        global.sick = global.toll - (global.deaths + global.recovered);
 }
 
-function fixName(c){
-    if(c.country === "USA") c.country = "US";
-    if(c.country === "UK") c.country = "United Kingdom";
-    if(c.country === "UAE") c.country = "United Arab Emirates";
-    if(c.country === "S. Korea") c.country = "Korea, South";
-    if(c.country === "Diamond Princess") c.country = "Cruise Ship";
+function fixName(c) {
+    if (c.country === "USA") c.country = "US";
+    if (c.country === "UK") c.country = "United Kingdom";
+    if (c.country === "UAE") c.country = "United Arab Emirates";
+    if (c.country === "S. Korea") c.country = "Korea, South";
+    if (c.country === "Diamond Princess") c.country = "Cruise Ship";
 }
