@@ -7,6 +7,7 @@ module.exports = async function(fileNames) {
     let rawData = {};
     let countries = [];
     let finalData = [];
+    let altData = {};
     let globalData = {
         toll: 0,
         recovered: 0,
@@ -36,14 +37,16 @@ module.exports = async function(fileNames) {
     }
     let rawDataEntries = Object.entries(rawData);
 
-    let altData = {};
-
-    try {
-        altData.all = await covid.all();
-        altData.countries = await covid.countries();
-    } catch (error) {
-        console.log("error with alternative data source");
-        throw error;
+    if(process.env.dev){
+        altData = require("./source/alt")
+    }else{
+        try {
+            altData.all = await covid.all();
+            altData.countries = await covid.countries();
+        } catch (error) {
+            console.log("error with alternative data source");
+            throw error;
+        }
     }
 
     let i = 1;

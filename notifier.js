@@ -1,32 +1,7 @@
 const webpush = require("web-push");
-const mongoose = require("mongoose");
+const db = require("./db/index");
 
 let Subscriptions;
-
-mongoose.connect(
-    process.env.DB_STRING,
-    { useNewUrlParser: true, useUnifiedTopology: true }
-);
-
-const db = mongoose.connection;
-
-db.on("error", console.error.bind(console, "connection error:"));
-db.once("open", function() {
-    console.log("connected to DB");
-    const subscriptionSchema = new mongoose.Schema({
-        object: {
-            endpoint: String,
-            expirationTime: String,
-            keys: {
-                p256dh: String,
-                auth: String
-            }
-        },
-        subjectId:Number
-    });
-    Subscriptions = mongoose.model("Subscriptions", subscriptionSchema);
-});
-
 let fakeSubs = [];
 
 PUBLIC_VAPID = process.env.PUBLIC_VAPID;
@@ -37,6 +12,10 @@ webpush.setVapidDetails(
     PUBLIC_VAPID,
     PRIVATE_VAPID
 );
+
+function init(sub){
+    Subscriptions = sub;
+}
 
 function add(subscription) {
     return new Promise((resolve, reject) => {
@@ -83,5 +62,6 @@ function send(finalData) {
     return Promise.all(promises);
 }
 
+exports.init = init;
 exports.add = add;
 exports.send = send;

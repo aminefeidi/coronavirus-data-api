@@ -6,12 +6,13 @@ const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const moment = require("moment");
-// const dotenv = require("dotenv");
-// dotenv.config();
+const dotenv = require("dotenv");
+dotenv.config();
 
 const PORT = process.env.PORT || 3000;
 const parse = require("./parser");
 const userCountry = require("./utils/userCountry");
+const db = require("./db/index");
 const notifier = require("./notifier");
 console.time("bootstrapped");
 
@@ -22,6 +23,7 @@ let lastUpdated;
 
 let finalData = {};
 let tempData = {};
+let notifierReady = false;
 
 let app = express();
 app.use(cors());
@@ -29,6 +31,14 @@ app.use(bodyParser.json());
 
 
 (async () => {
+    try {
+        let subs = await db.connect();
+        notifier.init(subs);
+        notifierReady = true;
+    } catch (error) {
+        console.log("error in connecting to DB:",error);
+    }
+
     try {
         finalData = await getAll(fileNames);
         console.timeEnd("bootstrapped");
@@ -51,22 +61,30 @@ app.use(bodyParser.json());
     }, 3600000 / 2);
 
     app.post("/api/subscribe", (req, res) => {
-        notifier
+        if(notifierReady){
+            notifier
             .add(req.body)
             .then(() => res.sendStatus(200))
             .catch(err => {
                 console.log(err);
                 res.sendStatus(500);
             });
+        }else{
+            res.sendStatus(500);
+        }
     });
 
     app.get("/api/sendAll", async (req, res) => {
-        try {
-            let response = await notifier.send(finalData)
-            console.log("Notifications sent");
-            res.sendStatus(200);
-        } catch (error) {
-            console.log("error in notify module:", error)
+        if(notifierReady){
+            try {
+                let response = await notifier.send(finalData)
+                console.log("Notifications sent");
+                res.sendStatus(200);
+            } catch (error) {
+                console.log("error in notify module:", error)
+                res.sendStatus(500);
+            }
+        }else{
             res.sendStatus(500);
         }
     });
