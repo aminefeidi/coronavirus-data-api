@@ -1,7 +1,7 @@
 const fs = require("fs");
 const csv = require("neat-csv");
 const isDate = require("./utils/isDate");
-const altSource = require('./alt-source/index');
+const altSource = require("./alt-source/index");
 
 module.exports = async function(fileNames) {
     let rawData = {};
@@ -37,9 +37,9 @@ module.exports = async function(fileNames) {
     }
     let rawDataEntries = Object.entries(rawData);
 
-    if(process.env.dev){
-        altData = require("./source/alt")
-    }else{
+    if (process.env.dev) {
+        altData = require("./source/alt");
+    } else {
         try {
             altData.all = await altSource.getAll();
             altData.countries = await altSource.getCountries();
@@ -123,9 +123,10 @@ function populateCountry(country, entries) {
 function calculateSick(country) {
     country.sick = country.toll - (country.recovered + country.deaths);
     for (let [date, toll] of Object.entries(country.history.toll)) {
-        country.history.sick[date] =
-            country.history.toll[date] -
-            (country.history.recovered[date] + country.history.deaths[date]);
+        let toll = country.history.toll[date] || 0;
+        let recovered = country.history.recovered[date] || 0;
+        let deaths = country.history.deaths[date] || 0;
+        country.history.sick[date] = toll - (recovered + deaths);
     }
 }
 
@@ -148,11 +149,11 @@ function toGeoJson(rawDataObj, countries) {
         }
         let tol = Object.values(row);
         let rec = [0];
-        if(rawRecovered[i]){
+        if (rawRecovered[i]) {
             rec = Object.values(rawRecovered[i]);
         }
         let ded = [0];
-        if(rawDeaths[i]){
+        if (rawDeaths[i]) {
             ded = Object.values(rawDeaths[i]);
         }
         let newFeature =
