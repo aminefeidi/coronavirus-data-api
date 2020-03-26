@@ -1,7 +1,7 @@
 const fs = require("fs");
 const csv = require("neat-csv");
 const isDate = require("./utils/isDate");
-const covid = require("novelcovid");
+const altSource = require('./alt-source/index');
 
 module.exports = async function(fileNames) {
     let rawData = {};
@@ -41,8 +41,8 @@ module.exports = async function(fileNames) {
         altData = require("./source/alt")
     }else{
         try {
-            altData.all = await covid.all();
-            altData.countries = await covid.countries();
+            altData.all = await altSource.getAll();
+            altData.countries = await altSource.getCountries();
         } catch (error) {
             console.log("error with alternative data source");
             throw error;
@@ -147,8 +147,14 @@ function toGeoJson(rawDataObj, countries) {
             }
         }
         let tol = Object.values(row);
-        let rec = Object.values(rawRecovered[i]);
-        let ded = Object.values(rawDeaths[i]);
+        let rec = [0];
+        if(rawRecovered[i]){
+            rec = Object.values(rawRecovered[i]);
+        }
+        let ded = [0];
+        if(rawDeaths[i]){
+            ded = Object.values(rawDeaths[i]);
+        }
         let newFeature =
             row["Province/State"] === ""
                 ? {
